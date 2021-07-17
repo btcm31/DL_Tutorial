@@ -1,10 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Feb 26 13:49:07 2019
-
-@author: DELL
-"""
-
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -13,42 +6,37 @@ import matplotlib.pyplot as plt
 def sigmoid(x):
     return 1 / (1 + np.exp(-x))
 
-# Load data từ file csv
 data = pd.read_csv('dataset.csv').values
-N, d = data.shape
-x = data[:, 0:d-1].reshape(-1, d-1)
-y = data[:, 2].reshape(-1, 1)
+X = data[:,:2].reshape(-1,2)
+y = data[:,2].reshape(-1,1)
 
-# Vẽ data bằng scatter
-x_cho_vay = x[y[:,0]==1]
-x_tu_choi = x[y[:,0]==0]
+plt.scatter(X[:10, 0], X[:10, 1], c='red', edgecolors='none', s=30, label='cho vay')
+plt.scatter(X[10:, 0], X[10:, 1], c='blue', edgecolors='none', s=30, label='từ chối')
 
-plt.scatter(x_cho_vay[:, 0], x_cho_vay[:, 1], c='red', edgecolors='none', s=30, label='cho vay')
-plt.scatter(x_tu_choi[:, 0], x_tu_choi[:, 1], c='blue', edgecolors='none', s=30, label='từ chối')
-plt.legend(loc=1)
 plt.xlabel('mức lương (triệu)')
 plt.ylabel('kinh nghiệm (năm)')
 
-# Thêm cột 1 vào dữ liệu x
-x = np.hstack((np.ones((N, 1)), x))
 
-w = np.array([0.,0.1,0.1]).reshape(-1,1)
+N = data.shape[0]
+X = np.hstack((np.ones((N,1)),X))
 
-# Số lần lặp bước 2
-numOfIteration = 1000
-cost = np.zeros((numOfIteration,1))
-learning_rate = 0.01
+w = np.array([0., 0.1, 0.1]).reshape(-1,1)
+w = np.hstack((w,w,w,w,w))
 
-for i in range(1, numOfIteration):
-    
-	 # Tính giá trị dự đoán
-    y_predict = sigmoid(np.dot(x, w))
-    cost[i] = -np.sum(np.multiply(y, np.log(y_predict)) + np.multiply(1-y, np.log(1-y_predict)))
-    # Gradient descent
-    w = w - learning_rate * np.dot(x.T, y_predict-y)	 
-    print(cost[i])
+numOfIters = 1000
 
-# Vẽ đường phân cách.
-t = 0.5
-plt.plot((4, 10),(-(w[0]+4*w[1]+ np.log(1/t-1))/w[2], -(w[0] + 10*w[1]+ np.log(1/t-1))/w[2]), 'g')
+lr_lst = [0.001, 0.003, 0.01, 0.03, 0.1]
+
+for idx, lr in enumerate(lr_lst):
+    for i in range(numOfIters):
+        m = w[:,idx].reshape(-1,1)
+        y_pred = sigmoid(np.dot(X,m))
+        m -= lr * np.dot(X.T, y_pred - y)
+        w[:,idx] = m.reshape(1,-1)
+
+
+print(w)
+for i in range(5):
+    plt.plot([4,10],[-(w[0,i] + w[1,i]*4)/w[2,i],-(w[0,i] + w[1,i]*10)/w[2,i]],label = 'lr = %s'%lr_lst[i])
+plt.legend()
 plt.show()
